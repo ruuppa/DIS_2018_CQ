@@ -5,7 +5,7 @@ var app = express()
 // Server port
 const port = 8000
 // Image files location
-var pathToImages = '/path/to/images' // Correct this!
+var pathToImages = '/School/School5/DIS/Project/DIS_2018_CQ-master/dqdemo/images/' // Correct this!
 // Application base URL address
 var baseURL = 'http://localhost:8000'
 
@@ -38,9 +38,14 @@ app.get('/team/:team', function (req, res) {
   var teamColor = req.params.team
   var newTeamMemberLink = baseURL + '/team/' + req.params.team + '/newmember'
   var teamQrCode = pathToImages + 'qr-helsinki-fi.svg'
-  var teamInfo = 'Your team has ' + teamSize + ' ' + (teamSize === 1 ? 'member' : 'members')
+  var teamInfo = 'Your team has ' + teamSize + ' ' + (teamSize === 1 ? 'member' : 'members') + ', collect 10 to win!'
+	if (teamSize >= 10) {
+		var gameStatus = "Finished. You win!";
+	} else {
+		var gameStatus = "Game ongoing.";
+	}
 
-  res.render('team_page', {team_page: teamPage, team_color: teamColor, new_team_member: newTeamMemberLink, team_qr_code: teamQrCode, team_info: teamInfo})
+  res.render('team_page', {team_page: teamPage, team_color: teamColor, new_team_member: newTeamMemberLink, team_qr_code: teamQrCode, team_info: teamInfo, game_status : gameStatus})
 })
 
 // Temporary URL for team members to join a team
