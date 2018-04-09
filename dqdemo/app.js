@@ -14,6 +14,8 @@ var availTeams = ['blue', 'green', 'red', 'yellow', 'aquamarine', 'blueviolet', 
 // Created teams and their member count
 var existingTeams = {}
 
+var finished = false
+
 // Express.JS settings
 app.set('view engine', 'pug')
 app.use(express.static('/'))
@@ -41,6 +43,9 @@ app.get('/team/:team', function (req, res) {
   var teamInfo = 'Your team has ' + teamSize + ' ' + (teamSize === 1 ? 'member' : 'members') + ', collect 10 to win!'
 	if (teamSize >= 10) {
 		var gameStatus = "Finished. You win!";
+		finished = true
+	} else if (finished){
+		var gameStatus = "Finished. You did not win, better luck next time!";
 	} else {
 		var gameStatus = "Game ongoing.";
 	}
