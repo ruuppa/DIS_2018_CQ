@@ -1,0 +1,27 @@
+doctype html
+html(lang='en')
+ head
+  //title= title
+  //Fix paths for your own system
+  link(rel='stylesheet', href='/School/School5/DIS/Project/DIS_2018_CQ-master/bootstrap/css/bootstrap.min.css')
+  link(rel='stylesheet', href='/School/School5/DIS/Project/DIS_2018_CQ-master/bootstrap/css/bootstrap-responsive.min.css')
+  link(rel='stylesheet', href='/School/School5/DIS/Project/DIS_2018_CQ-master/stylesheets/style.css')
+  script(src='https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js')
+  script(src='/School/School5/DIS/Project/DIS_2018_CQ-master/bootstrap/js/bootstrap.min.js')
+  //Add socket.io scripts (loading them from server would be optimal, but now we load from the web)
+  //script(src='/School/School5/DIS/Project/DIS_2018_CQ-master/node_modules/socket.io-client/dist/socket.io.js')
+  script(src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js')
+  //On the template, this is not run before "body onload", so calling the function does nothing
+  script(type='script/javascript').
+    function loadSocket(){
+     console.log("fug");
+     socket = io.connect('http://localhost:8000');
+     socket.on('connect',function(data) {
+      console.log(data);
+      socket.emit('my other event', { my: 'data' });
+     });
+    }
+ //This loads the timer.. But doing it like this is cumbersome, so a function-call would be preferred
+ body(onload='socket = io.connect("http://localhost:8000"); socket.on("timer", function (data) { $("#counter").html("Time remaining: "+data.countdown);});') 
+  <div id="counter"></div>  
+  block content

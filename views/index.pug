@@ -1,8 +1,17 @@
-doctype html
-html(lang='en')
- head
-   title Connect with buddies!
- body
-   h1 Scan the QR code to begin team creation.
-   a(href='http://localhost:8000/newteam')
-     img(src= new_team_qr_code)
+extends layout
+
+block content
+ div(class='main')
+  head
+    title Connect with buddies!
+  body
+    h1 Scan the QR code to begin team creation.
+    a(href='http://localhost:8000/newteam')
+      != new_team_qr_code
+ div(class='navbar navbar-default navbar-fixed-bottom')
+   h1 Current ranking:
+    ol
+     //No numbers with the above, but it sorts the objects quite seamlessly
+     - keysSorted = Object.keys(teams).sort(function(a,b){return teams[b]-teams[a]})
+     each item in keysSorted
+      li= item
