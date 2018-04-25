@@ -1,0 +1,41 @@
+var qrimage = require('qr-image')
+
+...
+
+function createQRLink (link, width, height) {
+
+  var svgStr = qrimage.imageSync(link, {type: 'svg'})
+
+  var idx = svgStr.indexOf('path') - 2
+
+  var fixedSvg = svgStr.substr(0, idx) + ' width="' + width + '" height="' + height + '"' + svgStr.substr(idx)
+
+
+
+  return fixedSvg
+
+}
+
+
+
+Change root function to be something like this:
+
+res.render('index', {new_team_qr_code: createQRLink(config.settings.baseURL + '/newteam', 200, 200)})
+
+and in new team home page modify teamQrCode line like this:
+
+var teamQrCode = createQRLink(newTeamMemberLink, 200, 200)
+
+
+
+Then in index.pug modify link like this:
+
+   a(href='http://localhost:8000/newteam') <- This should be also changed to coming from code side but ...
+
+     != new_team_qr_code
+
+and team_page.pug like this:
+
+   a(href= new_team_member)
+
+     != team_qr_code
