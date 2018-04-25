@@ -1,0 +1,47 @@
+body {
+  padding: 50px;
+  font: 12px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+ol {
+	padding-left: 12px;
+	margin: 0;
+}
+
+.sidebar li {
+	font-size: 18px;
+}
+
+.sidebar {
+    height: 100%; /* Full-height: remove this if you want "auto" height */
+    width: 10%; /* Set the width of the sidebar */
+    position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+    z-index: 1; /* Stay on top */
+    top: 0; /* Stay at the top */
+    left: 0;
+    background-color: #111; /* Black */
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 20px;
+}
+
+.sidebar h1 {
+    padding: 6px 8px 6px 16px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #818181;
+    display: block;
+}
+
+/*
+.main {
+    margin-left: 160px;
+}
+*/
+a {
+  color: #00B7FF;
+}
+
+#counter {
+    text-align: center;
+    font: 24px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
