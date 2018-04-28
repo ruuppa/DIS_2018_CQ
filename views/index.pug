@@ -5,13 +5,13 @@ block content
   head
     title Connect with buddies!
   body
-    h1 Scan the QR code to begin team creation.
+    h2 Scan the QR code to begin team creation.
     a(href='http://localhost:8000/newteam')
       != new_team_qr_code
- div(class='navbar navbar-default navbar-fixed-bottom')
-   h1 Current ranking:
+ nav(class='navbar navbar-inverse navbar-fixed-bottom')
+  div(class='container-fluid')
+    div(class='navbar-header')
+     h2 Current ranking:
     ol
-     //No numbers with the above, but it sorts the objects quite seamlessly
-     - keysSorted = Object.keys(teams).sort(function(a,b){return teams[b]-teams[a]})
-     each item in keysSorted
+     each item in keys_sorted
       li= item

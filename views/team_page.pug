@@ -5,10 +5,10 @@ block content
   head
     title= team_page
   body(bgcolor= team_color)
-    h1 Scan the QR code to join the team.
+    h2 Scan the QR code to join the team.
     a(href= new_team_member)
       != team_qr_code
 
-    h1= team_info
-    h2= sub_team_info
-    h1= game_status
+    h2= team_info
+    h3= sub_team_info
+    h2= game_status
