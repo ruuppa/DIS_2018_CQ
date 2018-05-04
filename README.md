@@ -10,5 +10,7 @@ Remember to
 * install dependencies ```npm install```
 * set paths properly on **app.js**.
 
-Moved working part to the main directory and left demo as is, for now.
+Moved old implementation into ```old``` directory.
+
+In new implementation directories ```pages```, ```styles``` and ```js``` contain client side parts while rest is server side implementation.
 

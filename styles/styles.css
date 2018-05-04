@@ -1,0 +1,20 @@
+.heading {
+    color: white;
+    background-color: cadetblue;
+    box-shadow: 5px 5px 5px rgba(0,0,0,0.7);
+    margin: 8px 4px;
+}
+
+.playerown {
+    color: white;
+    background-color: gray;
+    box-shadow: 5px 5px 5px rgba(0,0,0,0.7);
+    margin: 8px 4px;
+}
+
+.statuses {
+    color: white;
+    background-color: mediumseagreen;
+    box-shadow: 5px 5px 5px rgba(0,0,0,0.7);
+    margin: 8px 4px;
+}

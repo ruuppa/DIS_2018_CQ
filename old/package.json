@@ -1,7 +1,7 @@
 {
-  "name": "letsconnect",
+  "name": "dqdemo",
   "version": "0.0.1",
-  "description": "The app",
+  "description": "Design critique demo",
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js",
@@ -12,12 +12,8 @@
   "dependencies": {
     "eslint": "^4.19.1",
     "express": "^4.16.3",
-    "express-session": "^1.15.6",
-    "package.json": "^2.0.1",
     "pug": "^2.0.3",
-    "qr-image": "^3.2.0",
-    "socket.io": "^2.1.0",
-    "uuid": "^3.2.1"
+    "qr-image": "^3.2.0"
   },
   "devDependencies": {
     "eslint-config-standard": "^11.0.0",

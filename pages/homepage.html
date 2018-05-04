@@ -1,0 +1,45 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Let's connect!</title>
+  <meta name="description" content="the app">
+  <meta name="author" content="us">
+
+  <link rel="stylesheet" href="/styles/styles.css">
+
+  <script src="/js/socket.io.js"></script>
+  <script src="/js/functionality.js"></script>
+</head>
+
+<body>
+    <div class="heading">Timer</div>
+    <div class="playerown"><span class="nick"></span></div>
+    <div class="statuses">
+    </div>
+    <script>
+        // Socket.IO
+        var socket = io();
+
+        // Handlers for events
+        socket.on('connect', () => {
+            // Upon opening a connection request own nick
+            socket.emit('mynick');
+        })
+        socket.on('nick', function(data) {
+            // Show own nick
+            var nick = document.querySelector(".playerown").querySelector(".nick");
+            nick.textContent = data;
+        })
+        socket.on('participants', function(data) {
+            console.log(data);
+        })
+        socket.on('redirect', function(destination) {
+            // Server wants to send client to new place
+            window.location.href = destination;
+        })
+    </script>
+</body>
+</html>
