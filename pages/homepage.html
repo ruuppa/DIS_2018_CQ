@@ -16,7 +16,15 @@
 
 <body>
     <div class="heading">Timer</div>
-    <div class="playerown"><span class="nick"></span></div>
+    <div class="playerown">
+        <div class="nickinfo">
+            <span class="nick"></span>
+            <span class="nickcount"></span>
+        </div>
+        <div class="qrplace">
+            <svg class="qrcode" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 41 41" width="200" height="200"></svg>
+        </div>
+    </div>
     <div class="statuses">
     </div>
     <script>
@@ -33,8 +41,33 @@
             var nick = document.querySelector(".playerown").querySelector(".nick");
             nick.textContent = data;
         })
-        socket.on('participants', function(data) {
+        socket.on('nickcount', function(data) {
+            // Show own nick
+            var nickCount = document.querySelector(".playerown").querySelector(".nickcount");
+            nickCount.textContent = 'Connections: ' + data;
+        })
+        socket.on('nqr', function(data) {
+            // Show QR code
+            // console.log(data);
+            var qrcode = document.querySelector(".playerown").querySelector('.qrcode');
+            var newElem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            newElem.setAttribute('d', data);
+            // newElem.style.stroke = "#fff";
+            qrcode.appendChild(newElem);
+        })
+        socket.on('nqrlink', function(data) {
+            // Show QR code
             console.log(data);
+            var qrparent = document.querySelector(".playerown").querySelector('.qrplace');
+            var newLink = document.createElement("a");
+            newLink.setAttribute('href', data);
+            var qrcode = document.querySelector('.qrcode');
+            // newElem.style.stroke = "#fff";
+            newLink.appendChild(qrcode);
+            qrparent.appendChild(newLink);
+        })
+        socket.on('participants', function(data) {
+            addParticipants(data);
         })
         socket.on('redirect', function(destination) {
             // Server wants to send client to new place

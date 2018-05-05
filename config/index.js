@@ -11,7 +11,8 @@ config.settings.sessionSettings = {
 }
 config.settings.routes = {
     startPage: '/newtem',
-    homePage: '/homepage'
+    homePage: '/homepage',
+    joinPage: '/join/'
 }
 // Session related
 config.sessions = {}
