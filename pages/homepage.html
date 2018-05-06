@@ -12,14 +12,18 @@
 
   <script src="/js/socket.io.js"></script>
   <script src="/js/functionality.js"></script>
+  <script src="/js/jquery-3.3.1.min.js"></script>
 </head>
 
 <body>
-    <div class="heading">Timer</div>
+    <div class="heading">
+        <span id="counter"></span>
+    </div>
     <div class="playerown">
         <div class="nickinfo">
             <span class="nick"></span>
             <span class="nickcount"></span>
+            <span id="rank"></span>
         </div>
         <div class="qrplace">
             <svg class="qrcode" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 41 41" width="200" height="200"></svg>
@@ -72,6 +76,10 @@
         socket.on('redirect', function(destination) {
             // Server wants to send client to new place
             window.location.href = destination;
+        })
+
+        socket.on("timer", function (data) {
+            $("#counter").html("Time remaining: "+data.countdown);
         })
     </script>
 </body>

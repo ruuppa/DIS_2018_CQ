@@ -78,6 +78,23 @@ app.get(config.settings.routes.joinPage + ':uuid', function(req, res) {
     res.render('player_join', {join_msg: 'A new contact joins ' + config.game.players[req.params.uuid].nick})
 })
 
+//Timer for app.js or equivalent (app.js or equivalent)
+var countdown = 3660;
+setInterval(function() {  
+  countdown--;
+  var days        = Math.floor(countdown/24/60/60);
+  var hoursLeft   = Math.floor((countdown) - (days*86400));
+  var hours       = Math.floor(hoursLeft/3600);
+  var minutesLeft = Math.floor((hoursLeft) - (hours*3600));
+  var minutes     = Math.floor(minutesLeft/60);
+  var secondsLeft = countdown % 60;
+  if(hours < 10){hours = "0"+hours}
+  if(minutes < 10){minutes = "0"+minutes}
+  if(secondsLeft < 10){ secondsLeft = "0"+secondsLeft}
+  displaycountdown = "H: "+hours+" M: "+minutes+" S: "+secondsLeft
+  io.emit('timer', { countdown: displaycountdown });		//This sends the timer from server to clients
+}, 1000);
+
 // Socket.IO
 io.on('connection', function(socket) {
     console.log('Sock conn: ' + socket.request.session.uuid)
