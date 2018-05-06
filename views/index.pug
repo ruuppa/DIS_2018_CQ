@@ -2,15 +2,7 @@ doctype html
 html(lang='en')
  head
    title Connect with buddies!
-   script(src="/js/socket.io.js")
-   script(src="/js/functionality.js")
-   script(src="/js/jquery-3.3.1.min.js")
  body
-   script.
-    socket = io.connect("http://localhost:8000");
-    socket.on("timer", function (data) {
-     $("#counter").html("Time remaining: "+data.countdown);});
-   <div id="counter"></div>  
    h1 Scan the QR code to begin team creation.
    a(href= new_team_page)
      != new_team_qr_code

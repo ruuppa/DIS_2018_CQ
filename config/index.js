@@ -12,7 +12,11 @@ config.settings.sessionSettings = {
 config.settings.routes = {
     startPage: '/newtem',
     homePage: '/homepage',
-    joinPage: '/join/'
+    joinPage: '/join/',
+    statusPage: '/statuspage',
+    timerStart: '/_starttimer',
+    timerStop: '/_stoptimer',
+    timerReset: '/_resettimer'
 }
 // Session related
 config.sessions = {}
@@ -25,6 +29,7 @@ config.runtime.usedAnimals = []
 
 // Game specific
 config.game = {}
+config.game.timer = {}
 config.game.players = {}
 
 module.exports = config

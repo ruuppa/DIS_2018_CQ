@@ -18,7 +18,8 @@ module.exports = {
         // Create nick name for player
         config.game.players[uuid] = {}
         config.game.players[uuid].nick = captalizeFirstLetter(adj) + ' ' + ani
-        config.game.players[uuid].connectionCount = 0
+        config.game.players[uuid].connections = []
+        config.game.players[uuid].socket = null
     },
 };
 
