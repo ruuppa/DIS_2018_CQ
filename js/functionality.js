@@ -47,6 +47,7 @@ function addParticipants(data) {
     for(var i=0; i<data.length; i++) {
         var delems = data[i].split('|');
 
+        // Create div container for nick and count
         var newNickContainer = document.createElement("div");
         var divCls = document.createAttribute("class");
         divCls.value = constHome.EL_OTHERS.slice(1);
@@ -55,6 +56,7 @@ function addParticipants(data) {
         newNickContainer.setAttributeNode(divCls);
         newNickContainer.setAttributeNode(divData);
 
+        // Create span for nick
         var newNick = document.createElement("span");
         var nickSpanCls = document.createAttribute("class");
         nickSpanCls.value = constHome.EL_NICK_NAME.slice(1);
@@ -62,6 +64,7 @@ function addParticipants(data) {
         var newNickText = document.createTextNode(delems[0]);
         newNick.appendChild(newNickText);
 
+        // Create span for count
         var newNickCount = document.createElement("span");
         var countSpanCls = document.createAttribute("class");
         countSpanCls.value = constHome.EL_NICK_COUNT.slice(1);

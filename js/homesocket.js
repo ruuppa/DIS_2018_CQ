@@ -15,12 +15,12 @@ socket.on('connect', () => {
     socket.emit('mynick');
 })
 socket.on('nick', function(data) {
-    // Show own nick
+    // Show own nick name
     var nick = document.querySelector(constSock.EL_PLAYEROWN).querySelector(constSock.EL_NICK);
     nick.textContent = data;
 })
 socket.on('nickcount', function(data) {
-    // Show own nick
+    // Show own connection count
     var nickCount = document.querySelector(constSock.EL_PLAYEROWN).querySelector(constSock.EL_NICK_COUNT);
     nickCount.textContent = 'Connections: ' + data;
 })
@@ -33,7 +33,7 @@ socket.on('nqr', function(data) {
     qrcode.appendChild(newElem);
 })
 socket.on('nqrlink', function(data) {
-    // Show QR code
+    // Show QR code link
     console.log(data);
     var qrparent = document.querySelector(constSock.EL_PLAYEROWN).querySelector(constSock.EL_QR_PLACE);
     var newLink = document.createElement("a");
@@ -43,14 +43,15 @@ socket.on('nqrlink', function(data) {
     qrparent.appendChild(newLink);
 })
 socket.on('participants', function(data) {
+    // Show participant status list
     addParticipants(data);
-    sortStatuses();
 })
 socket.on('redirect', function(destination) {
     // Server wants to send client to new place
     window.location.href = destination;
 })
 socket.on('tick', function(data) {
+    // Update timer
     var ticker = document.querySelector(constSock.EL_HEADING);
     ticker.textContent = data;
 })

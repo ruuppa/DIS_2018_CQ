@@ -10,13 +10,10 @@ config.settings.sessionSettings = {
     saveUninitialized: false
 }
 config.settings.routes = {
-    startPage: '/newtem',
+    startPage: '/newteam',
     homePage: '/homepage',
     joinPage: '/join/',
-    statusPage: '/statuspage',
-    timerStart: '/_starttimer',
-    timerStop: '/_stoptimer',
-    timerReset: '/_resettimer'
+    statusPage: '/statuspage'
 }
 // Session related
 config.sessions = {}

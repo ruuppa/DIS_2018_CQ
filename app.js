@@ -5,6 +5,8 @@ var io = require('socket.io')(server)
 var session = require('express-session')
 var qrimage = require('qr-image')
 const uuidv4 = require('uuid/v4')
+
+// Game duration in seconds
 const gameDuration = 20 * 60
 
 var config = require('./config')
@@ -30,11 +32,8 @@ app.use('/styles', express.static(__dirname + '/styles', {index: false}))
 // Root page, i.e. where it all begins
 app.get('/', function (req, res) {
     console.log('New: ' + req.session.uuid)
-    // Create session for new client
-    if(typeof req.session.uuid == 'undefined') {
-        req.session.uuid = tools.newEntry(config, uuidv4)
-        console.log('ID: ' + req.session.uuid)
-    }
+    checkSession(req)
+
     res.render('index', {new_team_page: config.settings.baseURL + config.settings.routes.startPage, new_team_qr_code: createQRLink(config.settings.baseURL + config.settings.routes.startPage, 200, 200)})
 })
 
@@ -45,6 +44,9 @@ app.get(config.settings.routes.statusPage, function(req, res) {
 
 // Set up a new player
 app.get(config.settings.routes.startPage, function (req, res) {
+    console.log('New: ' + req.session.uuid)
+    checkSession(req)
+
     // Set up server side
     tools.generateConnectionInfo(config, req.session.uuid)
 
@@ -70,6 +72,12 @@ app.get(config.settings.routes.joinPage + ':uuid', function(req, res) {
     console.log('Join')
     console.log('Sessions: ' + config.sessions.ids)
     console.log('Session id: ' + req.session.uuid)
+
+    if(req.session.uuid == req.params.uuid) {
+        console.log('Self join')
+        res.render('dead_link')
+        return
+    }
 
     // Existing player joins another one
     if(config.sessions.ids.includes(req.session.uuid) &&
@@ -119,22 +127,6 @@ app.get(config.settings.routes.joinPage + ':uuid', function(req, res) {
     res.render('player_join', {join_msg: 'A new contact joins ' + config.game.players[req.params.uuid].nick})
 })
 
-app.get(config.settings.routes.timerStart, function(req, res) {
-    createTimer(gameDuration)
-    startTimer(countdown)
-    res.send('Start')
-})
-
-app.get(config.settings.routes.timerStop, function(req, res) {
-    stopTimer()
-    res.send('Stop')
-})
-
-app.get(config.settings.routes.timerReset, function(req, res) {
-    restartTimer()
-    res.send('Restart')
-})
-
 // Socket.IO
 io.on('connection', function(socket) {
     console.log('Sock conn: ' + socket.request.session.uuid)
@@ -168,6 +160,9 @@ io.on('connection', function(socket) {
         if(isTimer() == true && isTimerRunning() == true) {
             statusNote = 'RUNNING'
         }
+        else if(isTimer() == true && isTimerRunning() == false) {
+            statusNote = "Game over!"
+        }
         if(parts.length > 0) {
             io.emit('participants', parts)
         }
@@ -199,25 +194,51 @@ function extractPathFromQRLink(svgdata) {
 
 function participantStats() {
     var keys = Object.keys(config.game.players)
+    var partiMap = {}
+    var participantNicks = []
 
-    participantNicks = []
+    // Collect participants into mapped list based on their connection count
     keys.forEach(function(idx) {
         // console.log(idx)
-        participantNicks.push(config.game.players[idx].nick + '|' + config.game.players[idx].connections.length)
-        // console.log(config.game.players[idx].nick)
+        var scr = config.game.players[idx].connections.length
+        if(!(partiMap.hasOwnProperty(scr))) {
+            partiMap[scr] = []
+        }
+        partiMap[scr].push(config.game.players[idx].nick)
     })
+
+    // Sort map based on keys, i.e. connection count, to get score status
+    keys = Object.keys(partiMap)
+    keys.sort()
+    keys.reverse()
+    // and put them into list
+    keys.forEach(function(idx) {
+        for(var i=0; i<partiMap[idx].length; i++) {
+            participantNicks.push(partiMap[idx][i] + '|' + idx)
+        }
+    })
+    console.log(participantNicks)
 
     return participantNicks
 }
 
+function checkSession(req) {
+    // Create session for new client
+    if(typeof req.session.uuid == 'undefined') {
+        req.session.uuid = tools.newEntry(config, uuidv4)
+        console.log('ID: ' + req.session.uuid)
+    }
+}
+
 function countdown() {
+    // If time's up then game is over
     if(config.game.timer.present == 0) {
         stopTimer()
         io.emit('gamestatus', 'OFF')
-        io.emit('tick', 'Game over')
         io.emit('redirect', config.settings.routes.statusPage)
         return
     }
+    // Otherwise update clock and send it to clients
     config.game.timer.present--
     var hours = Math.floor(config.game.timer.present / 3600)
     var minutes = Math.floor((config.game.timer.present - hours * 3600) / 60)
@@ -251,7 +272,7 @@ function isTimerRunning() {
 }
 
 function restartTimer(duration) {
-    if(config.game.timer.timerObj == null) return
+    if(!isTimer()) return
     stopTimer()
     startTimer()
     console.log('Timer restarted')
