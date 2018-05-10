@@ -21,6 +21,11 @@ module.exports = {
         config.game.players[uuid].connections = []
         config.game.players[uuid].socket = null
     },
+    resetTerms: function(config) {
+        config.runtime.usedAdjectives = []
+        config.runtime.usedAnimals = []
+        config.game.players = {}
+    }
 };
 
 function captalizeFirstLetter(inStr) {

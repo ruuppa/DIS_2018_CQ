@@ -24,14 +24,14 @@ app.use(sessionMiddleware)
 // Setup view engine
 app.set('view engine', 'pug')
 
-// Server static files to client
+// Serve static files to client
 app.use('/pages', express.static(__dirname + '/pages', {index: false}))
 app.use('/js', express.static(__dirname + '/js', {index: false}))
 app.use('/styles', express.static(__dirname + '/styles', {index: false}))
 
 // Root page, i.e. where it all begins
 app.get('/', function (req, res) {
-    console.log('New: ' + req.session.uuid)
+    console.log('New (root): ' + req.session.uuid)
     checkSession(req)
 
     res.render('index', {new_team_page: config.settings.baseURL + config.settings.routes.startPage, new_team_qr_code: createQRLink(config.settings.baseURL + config.settings.routes.startPage, 200, 200)})
@@ -63,9 +63,31 @@ app.get(config.settings.routes.homePage, function(req, res) {
     if(isTimerRunning() == false) {
         startTimer(countdown)
     }
+    config.sessions.ingame.push(req.session.uuid)
 
     // Send actual file (HTML)
     res.sendFile(__dirname + '/pages/homepage.html')
+})
+
+// Game ending
+app.get(config.settings.routes.endingPage, function(req, res) {
+    // Remove from ingame
+    removeIngame(req.session.uuid)
+
+    res.redirect(config.settings.routes.statusPage)
+})
+
+app.get(config.settings.routes.holdPage, function(req, res) {
+    res.render('holding')
+})
+
+app.get(config.settings.routes.restartPage, function(req, res) {
+    if(isTimerRunning() == true || config.sessions.ingame.length > 0) {
+        infoScreen(res, 'Game ongoing', 'Restarting is not possible while the game is ongoing.')
+        return
+    }
+    restartGame()
+    res.send('Wilco!')
 })
 
 app.get(config.settings.routes.joinPage + ':uuid', function(req, res) {
@@ -75,7 +97,7 @@ app.get(config.settings.routes.joinPage + ':uuid', function(req, res) {
 
     if(req.session.uuid == req.params.uuid) {
         console.log('Self join')
-        res.render('dead_link')
+        infoScreen(res, config.constants.selfJoinTitle, config.constants.selfJoinMessage)
         return
     }
 
@@ -87,12 +109,12 @@ app.get(config.settings.routes.joinPage + ':uuid', function(req, res) {
             console.log('New for exisiting other player: ' + config.game.players[req.session.uuid].nick)
             config.game.players[req.session.uuid].connections.push(req.params.uuid)
             config.game.players[req.params.uuid].connections.push(req.session.uuid)
-            config.game.players[req.params.uuid].socket.emit('nickcount', config.game.players[req.params.uuid].connections.length)
-            config.game.players[req.session.uuid].socket.emit('nickcount', config.game.players[req.session.uuid].connections.length)
+            config.game.players[req.params.uuid].socket.emit(config.emitmsg.nickCount, config.game.players[req.params.uuid].connections.length)
+            config.game.players[req.session.uuid].socket.emit(config.emitmsg.nickCount, config.game.players[req.session.uuid].connections.length)
         }
         else {
             console.log('A double attempt (existing)')
-            res.render('double')
+            infoScreen(res, config.constants.contactRejoiningTitle, config.constants.contactRejoiningMessage)
             return
         }
     }
@@ -107,24 +129,26 @@ app.get(config.settings.routes.joinPage + ':uuid', function(req, res) {
         if(config.game.players[req.params.uuid].connections.includes(req.session.uuid) == false) {
             console.log('New for existing player: ' + config.game.players[req.params.uuid].nick)
             config.game.players[req.params.uuid].connections.push(req.session.uuid)
-            config.game.players[req.params.uuid].socket.emit('nickcount', config.game.players[req.params.uuid].connections.length)
+            config.game.players[req.params.uuid].socket.emit(config.emitmsg.nickCount, config.game.players[req.params.uuid].connections.length)
         }
         else if(config.game.players.hasOwnProperty(req.session.uuid) == false) {
             console.log('A double attempt (non-player)')
-            res.render('double')
+            infoScreen(res, config.constants.config.constants.nonplayerRejoiningTitle, config.constants.config.constants.nonplayerRejoiningMessage)
             return
         }
     }
     else {
         // Someone found a link for game that is already over
         console.log('New for non-existing player')
-        res.render('dead_link')
+        infoScreen(res, config.constants.deadLinkTitle, config.constants.deaLinkMessage)
         return
     }
 
     // Update participant statistics on players home pages
-    io.emit('participants', participantStats())
-    res.render('player_join', {join_msg: 'A new contact joins ' + config.game.players[req.params.uuid].nick})
+    io.emit(config.emitmsg.participants, participantStats())
+
+    // Res object, title and message
+    infoScreen(res, config.constants.newPlayerTitle, config.constants.newPlayerMessage + config.game.players[req.params.uuid].nick)
 })
 
 // Socket.IO
@@ -132,28 +156,30 @@ io.on('connection', function(socket) {
     console.log('Sock conn: ' + socket.request.session.uuid)
     // If no session UUID exists redirect to start page
     if(typeof socket.request.session.uuid == 'undefined') {
-        io.emit('redirect', '/')
+        io.emit(config.emitmsg.redirect, '/')
         return;
     }
 
+    checkReconnect(socket.request.session.uuid)
+
     // Respond to client request on his own nick
-    socket.on('mynick', function(data) {
+    socket.on(config.emitmsg.ownNick, function(data) {
         // Send playr information
         console.log('Player info')
         config.game.players[socket.request.session.uuid].socket = socket
-        socket.emit('nick', config.game.players[socket.request.session.uuid].nick)
-        socket.emit('nickcount', config.game.players[socket.request.session.uuid].connections.length)
+        socket.emit(config.emitmsg.nick, config.game.players[socket.request.session.uuid].nick)
+        socket.emit(config.emitmsg.nickCount, config.game.players[socket.request.session.uuid].connections.length)
         var nlink = config.settings.baseURL + config.settings.routes.joinPage + socket.request.session.uuid
-        socket.emit('nqr', extractPathFromQRLink(createQRLink(nlink, 200, 200)))
-        socket.emit('nqrlink', nlink)
+        socket.emit(config.emitmsg.nickQRCode, extractPathFromQRLink(createQRLink(nlink, 200, 200)))
+        socket.emit(config.emitmsg.nickQRLink, nlink)
 
         // Gather list of all participants and broadcast them to all
         participantNicks = participantStats()
         console.log('Participants: ' + participantNicks)
-        io.emit('participants', participantNicks)
+        io.emit(config.emitmsg.participants, participantNicks)
     })
 
-    socket.on('statuspage', function(data) {
+    socket.on(config.emitmsg.statusPage, function(data) {
         console.log('Status page')
         var statusNote = 'OFF'
         var parts = participantStats()
@@ -164,9 +190,23 @@ io.on('connection', function(socket) {
             statusNote = "Game over!"
         }
         if(parts.length > 0) {
-            io.emit('participants', parts)
+            io.emit(config.emitmsg.participants, parts)
         }
-        socket.emit('gamestatus', statusNote)
+        socket.emit(config.emitmsg.gameStatus, statusNote)
+    })
+
+    socket.on(config.emitmsg.disconnect, function(reason) {
+        // Collected disconnected inmage players
+        if(config.sessions.ingame.includes(socket.request.session.uuid)) {
+            console.log('Disconnect noted: ' + socket.request.session.uuid)
+            config.sessions.disconnected[socket.request.session.uuid] = {}
+            config.sessions.disconnected[socket.request.session.uuid].remaining = 15
+
+            // Start maintenance timer
+            if(typeof config.sessions.connectionTimer == 'undefined') {
+                config.sessions.connectionTimer = setInterval(connectionMaintenance, 1000)
+            }
+        }
     })
 })
 
@@ -174,7 +214,26 @@ io.on('connection', function(socket) {
 server.listen(config.settings.port)
 
 // Extras
+function restartGame() {
+    // Redirect all players to holding page
+    io.emit(config.emitmsg.redirect, config.settings.routes.holdPage)
+
+    // After short break restart the game
+    setTimeout(function() {
+        config.sessions.disconnected = {}
+        config.sessions.ingame = []
+        resetTimer()
+    }, 2000)
+}
+
+function infoScreen(res, title, message) {
+    // Create info screen that redirects to status page
+    var redirStr = '5; ' + config.settings.baseURL + config.settings.routes.statusPage
+    res.render('info_screen', {redir_page: redirStr, title_msg: title, info_msg: message})
+}
+
 function createQRLink (link, width, height) {
+    // Create QR-link to given location
     var svgStr = qrimage.imageSync(link, {type: 'svg'})
     var idx = svgStr.indexOf('path') - 2
     var fixedSvg = svgStr.substr(0, idx) + ' width="' + width + '" height="' + height + '"' + svgStr.substr(idx)
@@ -183,6 +242,7 @@ function createQRLink (link, width, height) {
 }
 
 function extractPathFromQRLink(svgdata) {
+    // Extract SVG path from QR-link
     var searchStr = 'path d='
     // Find above string starting point, add its length plus one for quotation mark
     var startIdx = svgdata.indexOf(searchStr) + searchStr.length + 1
@@ -193,6 +253,7 @@ function extractPathFromQRLink(svgdata) {
 }
 
 function participantStats() {
+    // Provide participant status information
     var keys = Object.keys(config.game.players)
     var partiMap = {}
     var participantNicks = []
@@ -223,10 +284,19 @@ function participantStats() {
 }
 
 function checkSession(req) {
-    // Create session for new client
+    // Create that session exists for new client
     if(typeof req.session.uuid == 'undefined') {
         req.session.uuid = tools.newEntry(config, uuidv4)
         console.log('ID: ' + req.session.uuid)
+    }
+}
+
+function removeIngame(uuid) {
+    // Remove UUID from ingame status
+    if(config.sessions.ingame.includes(uuid)) {
+        console.log('Remove ingame: ' + uuid)
+        var idx = config.sessions.ingame.indexOf(uuid)
+        config.sessions.ingame.splice(idx, 1)
     }
 }
 
@@ -234,8 +304,8 @@ function countdown() {
     // If time's up then game is over
     if(config.game.timer.present == 0) {
         stopTimer()
-        io.emit('gamestatus', 'OFF')
-        io.emit('redirect', config.settings.routes.statusPage)
+        io.emit(config.emitmsg.gameStatus, 'OFF')
+        io.emit(config.emitmsg.redirect, config.settings.routes.endingPage)
         return
     }
     // Otherwise update clock and send it to clients
@@ -246,7 +316,7 @@ function countdown() {
 
     var timerStr = hours + ':' + (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds)
 
-    io.emit('tick', timerStr)
+    io.emit(config.emitmsg.tick, timerStr)
 }
 
 function createTimer(duration) {
@@ -269,6 +339,11 @@ function isTimerRunning() {
     var stat = (config.game.timer.duration == config.game.timer.present) || (config.game.timer.present == 0)
     console.log('Timer running: ' + (stat ? 'no' : 'yes'))
     return (stat ? false : true)
+}
+
+function resetTimer() {
+    console.log('Timer reset')
+    config.game.timer.present = config.game.timer.duration
 }
 
 function restartTimer(duration) {
@@ -294,4 +369,53 @@ function stopTimer() {
     config.game.timer.timerObj = null
 
     console.log('Timer stopped')
+}
+
+function connectionMaintenance() {
+    // If no disconnected clients, no in-game clients or timer has stopped
+    if(Object.keys(config.sessions.disconnected).length == 0 ||
+    config.sessions.ingame.length == 0 || isTimerRunning() == false) {
+        // If no clients in queue stop timer
+        console.log('Game has ended')
+        clearInterval(config.sessions.connectionTimer)
+        config.sessions.connectionTimer = undefined
+        return
+    }
+
+    // Maintain timer and remove disconnected clients from in game
+    var keys = Object.keys(config.sessions.disconnected)
+    var toRemove = []
+    console.log('Maintain timers')
+    keys.forEach(function(idx) {
+        if(config.sessions.disconnected[idx].remaining > 0) {
+            config.sessions.disconnected[idx].remaining--;
+        }
+        else {
+            toRemove.push(idx)
+        }
+    })
+
+    if(toRemove.length > 0) {
+        do {
+            var ditem = toRemove.pop()
+            if(config.sessions.ingame.includes(ditem)) {
+                console.log('Disconnected: ' + ditem)
+                removeIngame(ditem)
+                // var idx = config.sessions.ingame.indexOf(ditem)
+                // config.sessions.ingame.splice(idx, 1)
+            }
+        } while(toRemove.length > 0)
+    }
+}
+
+function checkReconnect(uuid) {
+    // If no disconnected clients
+    if(Object.keys(config.sessions.disconnected).length == 0) return
+
+    var keys = Object.keys(config.sessions.disconnected)
+    // Remove client from disconnected queue on reconnect
+    if(keys.includes(uuid)) {
+        console.log('Reconnected: ' + uuid)
+        delete config.sessions.disconnected[uuid]
+    }
 }
